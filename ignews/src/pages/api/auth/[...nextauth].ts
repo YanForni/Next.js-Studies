@@ -1,6 +1,6 @@
 import NextAuth from "next-auth";
 import GithubProvider from "next-auth/providers/github";
-import { Casefold, query as q } from "faunadb";
+import { query as q } from "faunadb";
 import { fauna } from "../../../services/fauna";
 
 export default NextAuth({
@@ -25,30 +25,19 @@ export default NextAuth({
           q.Let(
             {
               userExists: q.Exists(
-                q.Match(
-                  q.Index("user_by_email"),
-                  q.Casefold(user.email)
-                )
-              )
+                q.Match(q.Index("user_by_email"), q.Casefold(user.email))
+              ),
             },
             q.If(
-              q.Var('userExists'),
-              q.Get(
-                q.Match(
-                  q.Index('user_by_email'),
-                  q.Casefold(user.email)
-                )
-              ),
-              q.Create(
-                q.Collection('users'),
-                {
-                  data: { email }
-                }
-              )
+              q.Var("userExists"),
+              q.Get(q.Match(q.Index("user_by_email"), q.Casefold(user.email))),
+              q.Create(q.Collection("users"), {
+                data: { email },
+              })
             )
           )
-        )
-        
+        );
+
         return true;
       } catch {
         return false;
